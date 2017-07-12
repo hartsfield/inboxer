@@ -1,3 +1,18 @@
+// SCOPE:
+// Check for unread messages
+// Get x number of messages
+// Get Previews
+// Get Body
+// Get labels
+// Get emails by label
+// Get emails by date
+// Get emails by sender
+// Get emails by recipient
+// Get emails by subject
+// Get emails by mailing-list
+// Get emails by thread-topic
+// Watch inbox
+// Mark as read/unread/important/spam
 package main
 
 import (
@@ -27,7 +42,7 @@ func main() {
 	// Range over the messages
 	for _, v := range msgs.Messages[:10] {
 		msg, _ := srv.Users.Messages.Get("me", v.Id).Do()
-		info := getSender2(msg)
+		info := getPartialMetadata(msg)
 		fmt.Println(info.From, info.Sender, info.Subject)
 		// fmt.Println(getSender(msg), getTime(msg.InternalDate))
 		if getByLabel(strings.ToUpper("UNREAD"), msg) {
@@ -37,6 +52,8 @@ func main() {
 	}
 }
 
+// GetBody gets, decodes, and returns the body of the email. It returns an
+// error if decoding goes wrong.
 func getBody(msg *gmail.Message) (string, error) {
 	dec, err := decodeEmailBody(msg.Payload.Parts[0].Body.Data)
 	if err != nil {
@@ -45,7 +62,8 @@ func getBody(msg *gmail.Message) (string, error) {
 	return dec, nil
 }
 
-func getByLabel(label string, msg *gmail.Message) bool {
+// HasLabel takes a label and an email and checks if that email has that label
+func hasLabel(label string, msg *gmail.Message) bool {
 	for _, v := range msg.LabelIds {
 		if v == label {
 			return true
@@ -54,12 +72,12 @@ func getByLabel(label string, msg *gmail.Message) bool {
 	return false
 }
 
-type senderInfo struct {
+type partialMetadata struct {
 	Sender, From, To, CC, Subject, MailingList, DeliveredTo, ThreadTopic []string
 }
 
-func getSender2(msg *gmail.Message) *senderInfo {
-	info := &senderInfo{}
+func getPartialMetadata(msg *gmail.Message) *partialMetadata {
+	info := &partialMetadata{}
 	fmt.Println("--------------------------------------------------------")
 	for _, v := range msg.Payload.Headers {
 		switch v.Name {
@@ -93,10 +111,13 @@ func decodeEmailBody(data string) (string, error) {
 	return string(decoded), nil
 }
 
-func getTime(datetime int64) time.Time {
+// ReceivedTime converts parses and converts a unix time stamp into a human
+// readable format ().
+func receivedTime(datetime int64) time.Time {
 	conv := strconv.FormatInt(datetime, 10)
-	cut := conv[:len(conv)-3]
-	tc, err := strconv.ParseInt(cut, 10, 64)
+	// Remove trailing zeros.
+	conv = conv[:len(conv)-3]
+	tc, err := strconv.ParseInt(conv, 10, 64)
 	if err != nil {
 		fmt.Println(err)
 	}
