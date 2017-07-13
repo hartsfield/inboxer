@@ -72,10 +72,12 @@ func hasLabel(label string, msg *gmail.Message) bool {
 	return false
 }
 
+// psrtialMetadata stores email metadata
 type partialMetadata struct {
 	Sender, From, To, CC, Subject, MailingList, DeliveredTo, ThreadTopic []string
 }
 
+// GetPartialMetadata gets some of the useful metadata from the headers.
 func getPartialMetadata(msg *gmail.Message) *partialMetadata {
 	info := &partialMetadata{}
 	fmt.Println("--------------------------------------------------------")
@@ -102,6 +104,8 @@ func getPartialMetadata(msg *gmail.Message) *partialMetadata {
 	return info
 }
 
+// decodeEmailBody is used to decode the email body by converting from
+// URLEncoded base64 to a string.
 func decodeEmailBody(data string) (string, error) {
 	decoded, err := base64.URLEncoding.DecodeString(data)
 	if err != nil {
