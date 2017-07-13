@@ -1,5 +1,6 @@
 // SCOPE:
 // Check for unread messages
+// Mark as read/unread/important/spam
 // Get x number of messages
 // Get Previews
 // Get Body
@@ -12,12 +13,12 @@
 // Get emails by mailing-list
 // Get emails by thread-topic
 // Watch inbox
-// Mark as read/unread/important/spam
 package main
 
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -38,41 +39,65 @@ func main() {
 		fmt.Println(err)
 	}
 
-	fmt.Println("--------------------------------------------------------")
 	// Range over the messages
-	for _, v := range msgs.Messages[:10] {
+	for _, v := range msgs.Messages[:5] {
 		msg, _ := srv.Users.Messages.Get("me", v.Id).Do()
-		info := getPartialMetadata(msg)
-		fmt.Println(info.From, info.Sender, info.Subject)
-		// fmt.Println(getSender(msg), getTime(msg.InternalDate))
-		if getByLabel(strings.ToUpper("UNREAD"), msg) {
+
+		// fmt.Println(getTime(msg.InternalDate))
+		if hasLabel("inbox", msg) {
 			// fmt.Println(msg.Snippet)
-			// fmt.Println("--------------------------------------------------------")
+			body, err := getBody(msg, "text/plain")
+			if err != nil {
+				fmt.Println(err)
+			}
+			fmt.Println(body)
+			// info := getPartialMetadata(msg)
+			// fmt.Println(info.From, info.Sender, info.Subject)
+			fmt.Println("========================================================")
+			fmt.Println("========================================================")
+			fmt.Println("========================================================")
 		}
 	}
 }
 
 // GetBody gets, decodes, and returns the body of the email. It returns an
-// error if decoding goes wrong.
-func getBody(msg *gmail.Message) (string, error) {
-	dec, err := decodeEmailBody(msg.Payload.Parts[0].Body.Data)
-	if err != nil {
-		return "", err
+// error if decoding goes wrong. mimeType is used to indicate whether you wnat
+// the plain text or html encoding ("text/html", "text/plain").
+func getBody(msg *gmail.Message, mimeType string) (string, error) {
+	for _, v := range msg.Payload.Parts {
+		if v.MimeType == "multipart/alternative" {
+			for _, l := range v.Parts {
+				if l.MimeType == mimeType && l.Body.Size >= 1 {
+					dec, err := decodeEmailBody(l.Body.Data)
+					if err != nil {
+						return "", err
+					}
+					return dec, nil
+				}
+			}
+		}
+		if v.MimeType == mimeType && v.Body.Size >= 1 {
+			dec, err := decodeEmailBody(v.Body.Data)
+			if err != nil {
+				return "", err
+			}
+			return dec, nil
+		}
 	}
-	return dec, nil
+	return "", errors.New("Couldn't Read Body")
 }
 
 // HasLabel takes a label and an email and checks if that email has that label
 func hasLabel(label string, msg *gmail.Message) bool {
 	for _, v := range msg.LabelIds {
-		if v == label {
+		if v == strings.ToUpper(label) {
 			return true
 		}
 	}
 	return false
 }
 
-// psrtialMetadata stores email metadata
+// PartialMetadata stores email metadata
 type partialMetadata struct {
 	Sender, From, To, CC, Subject, MailingList, DeliveredTo, ThreadTopic []string
 }
@@ -80,7 +105,7 @@ type partialMetadata struct {
 // GetPartialMetadata gets some of the useful metadata from the headers.
 func getPartialMetadata(msg *gmail.Message) *partialMetadata {
 	info := &partialMetadata{}
-	fmt.Println("--------------------------------------------------------")
+	fmt.Println("========================================================")
 	for _, v := range msg.Payload.Headers {
 		switch v.Name {
 		case "Sender":
