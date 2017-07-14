@@ -1,9 +1,13 @@
+// Package inboxer is a Go library for checking email using the google Gmail
+// API.
+package inboxer
+
 // SCOPE:
+// TODO:
 // Check for unread messages
 // Mark as read/unread/important/spam
 // Get x number of messages
 // Get Previews
-// Get Body
 // Get labels
 // Get emails by label
 // Get emails by date
@@ -13,10 +17,16 @@
 // Get emails by mailing-list
 // Get emails by thread-topic
 // Watch inbox
-package main
+// LICENSE
+// README.md
+// how-to: add client credentials (for readme)
+// tests
+//
+// DONE:
+// Get Body
+//
 
 import (
-	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -24,46 +34,13 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.com/hartsfield/gmailAPI"
 	gmail "google.golang.org/api/gmail/v1"
 )
-
-func main() {
-	// Connect to the gmail API service.
-	ctx := context.Background()
-	srv := gmailAPI.ConnectToService(ctx, gmail.MailGoogleComScope)
-
-	// Get the messages
-	msgs, err := srv.Users.Messages.List("me").Do()
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	// Range over the messages
-	for _, v := range msgs.Messages[:5] {
-		msg, _ := srv.Users.Messages.Get("me", v.Id).Do()
-
-		// fmt.Println(getTime(msg.InternalDate))
-		if hasLabel("inbox", msg) {
-			// fmt.Println(msg.Snippet)
-			body, err := getBody(msg, "text/plain")
-			if err != nil {
-				fmt.Println(err)
-			}
-			fmt.Println(body)
-			// info := getPartialMetadata(msg)
-			// fmt.Println(info.From, info.Sender, info.Subject)
-			fmt.Println("========================================================")
-			fmt.Println("========================================================")
-			fmt.Println("========================================================")
-		}
-	}
-}
 
 // GetBody gets, decodes, and returns the body of the email. It returns an
 // error if decoding goes wrong. mimeType is used to indicate whether you wnat
 // the plain text or html encoding ("text/html", "text/plain").
-func getBody(msg *gmail.Message, mimeType string) (string, error) {
+func GetBody(msg *gmail.Message, mimeType string) (string, error) {
 	for _, v := range msg.Payload.Parts {
 		if v.MimeType == "multipart/alternative" {
 			for _, l := range v.Parts {
@@ -88,7 +65,7 @@ func getBody(msg *gmail.Message, mimeType string) (string, error) {
 }
 
 // HasLabel takes a label and an email and checks if that email has that label
-func hasLabel(label string, msg *gmail.Message) bool {
+func HasLabel(label string, msg *gmail.Message) bool {
 	for _, v := range msg.LabelIds {
 		if v == strings.ToUpper(label) {
 			return true
@@ -98,13 +75,13 @@ func hasLabel(label string, msg *gmail.Message) bool {
 }
 
 // PartialMetadata stores email metadata
-type partialMetadata struct {
+type PartialMetadata struct {
 	Sender, From, To, CC, Subject, MailingList, DeliveredTo, ThreadTopic []string
 }
 
 // GetPartialMetadata gets some of the useful metadata from the headers.
-func getPartialMetadata(msg *gmail.Message) *partialMetadata {
-	info := &partialMetadata{}
+func GetPartialMetadata(msg *gmail.Message) *PartialMetadata {
+	info := &PartialMetadata{}
 	fmt.Println("========================================================")
 	for _, v := range msg.Payload.Headers {
 		switch v.Name {
@@ -142,7 +119,7 @@ func decodeEmailBody(data string) (string, error) {
 
 // ReceivedTime converts parses and converts a unix time stamp into a human
 // readable format ().
-func receivedTime(datetime int64) time.Time {
+func ReceivedTime(datetime int64) time.Time {
 	conv := strconv.FormatInt(datetime, 10)
 	// Remove trailing zeros.
 	conv = conv[:len(conv)-3]
