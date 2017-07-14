@@ -6,21 +6,23 @@ package inboxer
 // TODO:
 // Check for unread messages
 // Mark as read/unread/important/spam
-// Get x number of messages
-// Get Previews
+// Get Previews/snippet
 // Get labels
 // Get emails by label
 // Get emails by date
-// Get emails by sender
-// Get emails by recipient
-// Get emails by subject
-// Get emails by mailing-list
-// Get emails by thread-topic
+///
 // Watch inbox
 // LICENSE
 // README.md
 // how-to: add client credentials (for readme)
 // tests
+//
+// WORKS:
+// Get emails by sender
+// Get emails by recipient
+// Get emails by subject
+// Get emails by mailing-list
+// Get emails by thread-topic
 //
 // DONE:
 // Get Body
@@ -38,7 +40,7 @@ import (
 )
 
 // GetBody gets, decodes, and returns the body of the email. It returns an
-// error if decoding goes wrong. mimeType is used to indicate whether you wnat
+// error if decoding goes wrong. mimeType is used to indicate whether you want
 // the plain text or html encoding ("text/html", "text/plain").
 func GetBody(msg *gmail.Message, mimeType string) (string, error) {
 	for _, v := range msg.Payload.Parts {
@@ -62,6 +64,31 @@ func GetBody(msg *gmail.Message, mimeType string) (string, error) {
 		}
 	}
 	return "", errors.New("Couldn't Read Body")
+}
+
+func CheckForUnread(srv *gmail.Service) (bool, error) {
+	// Get the messages
+	// msgs, err := srv.Users.Messages.List("me").Do()
+	// if err != nil {
+	// 	return false, err
+	// }
+	label, err := srv.Users.Labels.Get("me", "INBOX").Do()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(label.MessagesTotal)
+	fmt.Println(label.MessagesUnread)
+	fmt.Println(label.ThreadsTotal)
+	fmt.Println(label.ThreadsUnread)
+
+	// 	fmt.Println(len(msgs.Messages))
+	// 	for _, v := range msgs.Messages {
+	// 		msg, _ := srv.Users.Messages.Get("me", v.Id).Do()
+	// 		if HasLabel("unread", msg) {
+	// 			return true, nil
+	// 		}
+	// 	}
+	return false, nil
 }
 
 // HasLabel takes a label and an email and checks if that email has that label
@@ -130,6 +157,23 @@ func ReceivedTime(datetime int64) time.Time {
 	return time.Unix(tc, 0)
 }
 
+// GetMessages gets and returns gmail messages
+func GetMessages(srv *gmail.Service, howMany uint) ([]*gmail.Message, error) {
+	var msgSlice []*gmail.Message
+
+	// Get the messages
+	msgs, err := srv.Users.Messages.List("me").Do()
+	if err != nil {
+		return msgSlice, err
+	}
+
+	for _, v := range msgs.Messages[:howMany] {
+		msg, _ := srv.Users.Messages.Get("me", v.Id).Do()
+		msgSlice = append(msgSlice, msg)
+	}
+	return msgSlice, nil
+}
+
 // func watchInbox() {
 // 	req := &gmail.WatchRequest{
 // 		LabelFilterAction: "include",
@@ -139,18 +183,4 @@ func ReceivedTime(datetime int64) time.Time {
 
 // 	wr, _ := srv.Users.Watch("me", req).Do()
 // 	fmt.Println(wr.ForceSendFields)
-// }
-
-// func getMessages() (*gmail.ListMessagesResponse, error) {
-// 	// Connect to the gmail API service.
-// 	ctx := context.Background()
-// 	srv := gmailAPI.ConnectToService(ctx, gmail.MailGoogleComScope)
-
-// 	// Get the messages
-// 	msgs, err := srv.Users.Messages.List("me").Do()
-// 	if err != nil {
-// 		return &gmail.ListMessagesResponse{}, err
-// 	}
-
-// 	return msgs, nil
 // }
