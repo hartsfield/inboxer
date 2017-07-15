@@ -66,29 +66,42 @@ func GetBody(msg *gmail.Message, mimeType string) (string, error) {
 	return "", errors.New("Couldn't Read Body")
 }
 
-func CheckForUnread(srv *gmail.Service) (bool, error) {
-	// Get the messages
-	// msgs, err := srv.Users.Messages.List("me").Do()
-	// if err != nil {
-	// 	return false, err
-	// }
-	label, err := srv.Users.Labels.Get("me", "INBOX").Do()
+// NOTE: When checking your inbox for unread messages, it's not uncommon for
+// it return thousands of unread messages that you don't know about. To see them
+// in gmail, search your mail for "label:unread". For CheckForUnread to work
+// properly you need to mark all mail as read either through gmail or through
+// the MarkAllAsRead() function found in this library.
+func CheckForUnreadByLabel(srv *gmail.Service, label string) (int64, error) {
+	inbox, err := srv.Users.Labels.Get("me", label).Do()
 	if err != nil {
-		fmt.Println(err)
+		return -1, err
 	}
-	fmt.Println(label.MessagesTotal)
-	fmt.Println(label.MessagesUnread)
-	fmt.Println(label.ThreadsTotal)
-	fmt.Println(label.ThreadsUnread)
 
-	// 	fmt.Println(len(msgs.Messages))
-	// 	for _, v := range msgs.Messages {
-	// 		msg, _ := srv.Users.Messages.Get("me", v.Id).Do()
-	// 		if HasLabel("unread", msg) {
-	// 			return true, nil
-	// 		}
-	// 	}
-	return false, nil
+	// fmt.Println(label.MessagesUnread)
+	if inbox.MessagesUnread == 0 && inbox.ThreadsUnread == 0 {
+		return 0, nil
+	}
+
+	return inbox.MessagesUnread + inbox.ThreadsUnread, nil
+}
+
+func CheckForUnread(srv *gmail.Service) (int64, error) {
+	inbox, err := srv.Users.Labels.Get("me", "UNREAD").Do()
+	if err != nil {
+		return -1, err
+	}
+
+	// fmt.Println(label.MessagesUnread)
+	if inbox.MessagesUnread == 0 && inbox.ThreadsUnread == 0 {
+		return 0, nil
+	}
+
+	return inbox.MessagesUnread + inbox.ThreadsUnread, nil
+}
+
+// GetLabels gets a list of the labels used in the users inbox.
+func GetLabels(srv *gmail.Service) (*gmail.ListLabelsResponse, error) {
+	return srv.Users.Labels.List("me").Do()
 }
 
 // HasLabel takes a label and an email and checks if that email has that label
