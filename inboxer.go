@@ -26,8 +26,8 @@ package inboxer
 // TODO:
 // channels and go routines
 // Mark as read/unread/important/spam
-// Get emails by label
-// Get emails by query
+// check/return errors
+//
 //
 // tests
 // Watch inbox
@@ -37,16 +37,12 @@ package inboxer
 // Get Previews/snippet (put in docs)
 //
 // WORKS:
-// Get emails by date
-// Get emails by sender
-// Get emails by recipient
-// Get emails by subject
-// Get emails by mailing-list
-// Get emails by thread-topic
+// Get emails by query
+// Get email metadata
+// Get email main body
 // Get labels
 // Check for unread messages
 // Convert date to human readable format
-// Get Body
 //
 // DONE:
 // LICENSE
@@ -89,71 +85,14 @@ func GetBody(msg *gmail.Message, mimeType string) (string, error) {
 	return "", errors.New("Couldn't Read Body")
 }
 
-// CheckForUnreadByLabel checks for unread mail maching the speciified label.
-// NOTE: When checking your inbox for unread messages, it's not uncommon for
-// it return thousands of unread messages that you don't know about. To see them
-// in gmail, search your mail for "label:unread". For CheckForUnreadByLabel to
-// work properly you need to mark all mail as read either through gmail or
-// through the MarkAllAsRead() function found in this library.
-func CheckForUnreadByLabel(srv *gmail.Service, label string) (int64, error) {
-	inbox, err := srv.Users.Labels.Get("me", label).Do()
-	if err != nil {
-		return -1, err
-	}
-
-	// fmt.Println(label.MessagesUnread)
-	if inbox.MessagesUnread == 0 && inbox.ThreadsUnread == 0 {
-		return 0, nil
-	}
-
-	return inbox.MessagesUnread + inbox.ThreadsUnread, nil
-}
-
-// CheckForUnread checks for mail labeled "UNREAD".
-// NOTE: When checking your inbox for unread messages, it's not uncommon for
-// it return thousands of unread messages that you don't know about. To see them
-// in gmail, search your mail for "label:unread". For CheckForUnread to
-// work properly you need to mark all mail as read either through gmail or
-// through the MarkAllAsRead() function found in this library.
-func CheckForUnread(srv *gmail.Service) (int64, error) {
-	inbox, err := srv.Users.Labels.Get("me", "UNREAD").Do()
-	if err != nil {
-		return -1, err
-	}
-
-	// fmt.Println(label.MessagesUnread)
-	if inbox.MessagesUnread == 0 && inbox.ThreadsUnread == 0 {
-		return 0, nil
-	}
-
-	return inbox.MessagesUnread + inbox.ThreadsUnread, nil
-}
-
-// GetLabels gets a list of the labels used in the users inbox.
-func GetLabels(srv *gmail.Service) (*gmail.ListLabelsResponse, error) {
-	return srv.Users.Labels.List("me").Do()
-}
-
-// HasLabel takes a label and an email and checks if that email has that label
-func HasLabel(label string, msg *gmail.Message) bool {
+// HasLabel takes an email and a label and checks if that email has that label
+func HasLabel(msg *gmail.Message, label string) bool {
 	for _, v := range msg.LabelIds {
 		if v == strings.ToUpper(label) {
 			return true
 		}
 	}
 	return false
-}
-
-// Query queries the inbox for a string following the search style of the gmail
-// online mailbox.
-// example:
-// "in:sent after:2017/01/01 before:2017/01/30"
-func Query(srv *gmail.Service, query string) []*gmail.Message {
-	inbox, err := srv.Users.Messages.List("me").Q(query).Do()
-	if err != nil {
-		fmt.Println(err)
-	}
-	return getById(srv, inbox)
 }
 
 // PartialMetadata stores email metadata. Some fields may sound redundant, but
@@ -218,8 +157,8 @@ func decodeEmailBody(data string) (string, error) {
 	return string(decoded), nil
 }
 
-// ReceivedTime converts parses and converts a unix time stamp into a human
-// readable format ().
+// ReceivedTime parses and converts a unix time stamp into a human readable
+// format ().
 func ReceivedTime(datetime int64) time.Time {
 	conv := strconv.FormatInt(datetime, 10)
 	// Remove trailing zeros.
@@ -231,6 +170,21 @@ func ReceivedTime(datetime int64) time.Time {
 	return time.Unix(tc, 0)
 }
 
+// Query queries the inbox for a string following the search style of the gmail
+// online mailbox.
+// example:
+// "in:sent after:2017/01/01 before:2017/01/30"
+func Query(srv *gmail.Service, query string) []*gmail.Message {
+	inbox, err := srv.Users.Messages.List("me").Q(query).Do()
+	if err != nil {
+		fmt.Println(err)
+	}
+	return getById(srv, inbox)
+}
+
+// getById gets emails individually by ID. This is neccessary because this is
+// how the gmail API is set up apparently (but why?).
+//
 func getById(srv *gmail.Service, msgs *gmail.ListMessagesResponse) []*gmail.Message {
 	var msgSlice []*gmail.Message
 	for _, v := range msgs.Messages {
@@ -251,6 +205,51 @@ func GetMessages(srv *gmail.Service, howMany uint) ([]*gmail.Message, error) {
 	}
 
 	return getById(srv, msgs), nil
+}
+
+// CheckForUnreadByLabel checks for unread mail maching the speciified label.
+// NOTE: When checking your inbox for unread messages, it's not uncommon for
+// it return thousands of unread messages that you don't know about. To see them
+// in gmail, search your mail for "label:unread". For CheckForUnreadByLabel to
+// work properly you need to mark all mail as read either through gmail or
+// through the MarkAllAsRead() function found in this library.
+func CheckForUnreadByLabel(srv *gmail.Service, label string) (int64, error) {
+	inbox, err := srv.Users.Labels.Get("me", label).Do()
+	if err != nil {
+		return -1, err
+	}
+
+	// fmt.Println(label.MessagesUnread)
+	if inbox.MessagesUnread == 0 && inbox.ThreadsUnread == 0 {
+		return 0, nil
+	}
+
+	return inbox.MessagesUnread + inbox.ThreadsUnread, nil
+}
+
+// CheckForUnread checks for mail labeled "UNREAD".
+// NOTE: When checking your inbox for unread messages, it's not uncommon for
+// it return thousands of unread messages that you don't know about. To see them
+// in gmail, search your mail for "label:unread". For CheckForUnread to
+// work properly you need to mark all mail as read either through gmail or
+// through the MarkAllAsRead() function found in this library.
+func CheckForUnread(srv *gmail.Service) (int64, error) {
+	inbox, err := srv.Users.Labels.Get("me", "UNREAD").Do()
+	if err != nil {
+		return -1, err
+	}
+
+	// fmt.Println(label.MessagesUnread)
+	if inbox.MessagesUnread == 0 && inbox.ThreadsUnread == 0 {
+		return 0, nil
+	}
+
+	return inbox.MessagesUnread + inbox.ThreadsUnread, nil
+}
+
+// GetLabels gets a list of the labels used in the users inbox.
+func GetLabels(srv *gmail.Service) (*gmail.ListLabelsResponse, error) {
+	return srv.Users.Labels.List("me").Do()
 }
 
 // func watchInbox() {
