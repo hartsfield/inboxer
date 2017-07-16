@@ -56,17 +56,21 @@ import (
 	gmail "google.golang.org/api/gmail/v1"
 )
 
-func MarkAs(srv *gmail.Service, msg *gmail.Message, labels []string) (*gmail.Message, error) {
-	req := &gmail.ModifyMessageRequest{
-		AddLabelIds: labels,
-	}
+// MarkAs allows you to mark an email with a specific label using the
+// gmail.ModifyMessageRequest struct.
+func MarkAs(srv *gmail.Service, msg *gmail.Message, req *gmail.ModifyMessageRequest) (*gmail.Message, error) {
 	return srv.Users.Messages.Modify("me", msg.Id, req).Do()
 }
 
+// MarkAllAsRead removes the UNREAD label from all emails.
 func MarkAllAsRead(srv *gmail.Service) error {
-	msgs := Query(srv, "in:UNREAD")
+	req := &gmail.ModifyMessageRequest{
+		RemoveLabelIds: []string{"UNREAD"},
+	}
+
+	msgs := Query(srv, "label:UNREAD")
 	for _, v := range msgs {
-		_, err := MarkAs(srv, v, []string{"READ"})
+		_, err := MarkAs(srv, v, req)
 		if err != nil {
 			return err
 		}
