@@ -24,19 +24,20 @@ package inboxer
 
 // SCOPE:
 // TODO:
+// channels and go routines
 // Mark as read/unread/important/spam
 // Get emails by label
-// Get emails by date
+// Get emails by query
 //
 // tests
 // Watch inbox
-// LICENSE
 // DOCS
 // README.md
 // how-to: add client credentials (for readme)
 // Get Previews/snippet (put in docs)
 //
 // WORKS:
+// Get emails by date
 // Get emails by sender
 // Get emails by recipient
 // Get emails by subject
@@ -46,6 +47,9 @@ package inboxer
 // Check for unread messages
 // Convert date to human readable format
 // Get Body
+//
+// DONE:
+// LICENSE
 
 import (
 	"encoding/base64"
@@ -57,10 +61,6 @@ import (
 
 	gmail "google.golang.org/api/gmail/v1"
 )
-
-func getByDate(srv *gmail.Service, start time.Time, end time.Time) *[]gmail.Message {
-	inbox, err := srv.Users.Labels.Get("me", label).Do()
-}
 
 // GetBody gets, decodes, and returns the body of the email. It returns an
 // error if decoding goes wrong. mimeType is used to indicate whether you want
@@ -149,10 +149,20 @@ type PartialMetadata struct {
 	Sender, From, To, CC, Subject, MailingList, DeliveredTo, ThreadTopic []string
 }
 
+// GetByDate gets and returns emails within the time frame specified.
+func GetByDate(srv *gmail.Service /*start time.Time, end time.Time*/) []*gmail.Message {
+	inbox, err := srv.Users.Messages.List("me").Q("in:inbox after:2017/01/01 before:2017/01/30").Do()
+	if err != nil {
+		fmt.Println(err)
+	}
+	return getById(srv, inbox)
+}
+
 // GetPartialMetadata gets some of the useful metadata from the headers.
 func GetPartialMetadata(msg *gmail.Message) *PartialMetadata {
 	info := &PartialMetadata{}
 	fmt.Println("========================================================")
+	fmt.Println(msg.Snippet)
 	for _, v := range msg.Payload.Headers {
 		switch v.Name {
 		case "Sender":
@@ -200,6 +210,15 @@ func ReceivedTime(datetime int64) time.Time {
 	return time.Unix(tc, 0)
 }
 
+func getById(srv *gmail.Service, msgs *gmail.ListMessagesResponse) []*gmail.Message {
+	var msgSlice []*gmail.Message
+	for _, v := range msgs.Messages {
+		msg, _ := srv.Users.Messages.Get("me", v.Id).Do()
+		msgSlice = append(msgSlice, msg)
+	}
+	return msgSlice
+}
+
 // GetMessages gets and returns gmail messages
 func GetMessages(srv *gmail.Service, howMany uint) ([]*gmail.Message, error) {
 	var msgSlice []*gmail.Message
@@ -210,11 +229,7 @@ func GetMessages(srv *gmail.Service, howMany uint) ([]*gmail.Message, error) {
 		return msgSlice, err
 	}
 
-	for _, v := range msgs.Messages {
-		msg, _ := srv.Users.Messages.Get("me", v.Id).Do()
-		msgSlice = append(msgSlice, msg)
-	}
-	return msgSlice, nil
+	return getById(srv, msgs), nil
 }
 
 // func watchInbox() {
