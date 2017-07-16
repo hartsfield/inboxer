@@ -27,10 +27,9 @@ package inboxer
 // channels and go routines
 // Mark as read/unread/important/spam
 // check/return errors
-//
-//
-// tests
 // Watch inbox
+//
+// tests (test for both messages and "threads")
 // DOCS
 // README.md
 // how-to: add client credentials (for readme)
@@ -52,11 +51,28 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	gmail "google.golang.org/api/gmail/v1"
 )
+
+func MarkAs(srv *gmail.Service, msg *gmail.Message, labels []string) (*gmail.Message, error) {
+	req := &gmail.ModifyMessageRequest{
+		AddLabelIds: labels,
+	}
+	return srv.Users.Messages.Modify("me", msg.Id, req).Do()
+}
+
+func MarkAllAsRead(srv *gmail.Service) error {
+	msgs := Query(srv, "in:UNREAD")
+	for _, v := range msgs {
+		_, err := MarkAs(srv, v, []string{"READ"})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 // GetBody gets, decodes, and returns the body of the email. It returns an
 // error if decoding goes wrong. mimeType is used to indicate whether you want
@@ -83,16 +99,6 @@ func GetBody(msg *gmail.Message, mimeType string) (string, error) {
 		}
 	}
 	return "", errors.New("Couldn't Read Body")
-}
-
-// HasLabel takes an email and a label and checks if that email has that label
-func HasLabel(msg *gmail.Message, label string) bool {
-	for _, v := range msg.LabelIds {
-		if v == strings.ToUpper(label) {
-			return true
-		}
-	}
-	return false
 }
 
 // PartialMetadata stores email metadata. Some fields may sound redundant, but
@@ -260,4 +266,14 @@ func GetLabels(srv *gmail.Service) (*gmail.ListLabelsResponse, error) {
 
 // 	wr, _ := srv.Users.Watch("me", req).Do()
 // 	fmt.Println(wr.ForceSendFields)
+// }
+//
+//// HasLabel takes an email and a label and checks if that email has that label.
+// func HasLabel(msg *gmail.Message, label string) bool {
+// 	for _, v := range msg.LabelIds {
+// 		if v == strings.ToUpper(label) {
+// 			return true
+// 		}
+// 	}
+// 	return false
 // }
