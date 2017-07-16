@@ -144,18 +144,41 @@ func HasLabel(label string, msg *gmail.Message) bool {
 	return false
 }
 
-// PartialMetadata stores email metadata
-type PartialMetadata struct {
-	Sender, From, To, CC, Subject, MailingList, DeliveredTo, ThreadTopic []string
-}
-
-// GetByDate gets and returns emails within the time frame specified.
-func GetByDate(srv *gmail.Service /*start time.Time, end time.Time*/) []*gmail.Message {
-	inbox, err := srv.Users.Messages.List("me").Q("in:inbox after:2017/01/01 before:2017/01/30").Do()
+// Query queries the inbox for a string following the search style of the gmail
+// online mailbox.
+// example:
+// "in:sent after:2017/01/01 before:2017/01/30"
+func Query(srv *gmail.Service, query string) []*gmail.Message {
+	inbox, err := srv.Users.Messages.List("me").Q(query).Do()
 	if err != nil {
 		fmt.Println(err)
 	}
 	return getById(srv, inbox)
+}
+
+// PartialMetadata stores email metadata. Some fields may sound redundant, but
+// infact have different contexts. Some are slices of string because the ones
+// that have multiple values are still being sorted from those that don't.
+type PartialMetadata struct {
+	// Sender is the entity that originally created and sent the message
+	Sender string
+	// From is the entitiy that sent the message to you (e.g. googlegroups). Most
+	// of the time this information is only relevant to mailing lists.
+	From string
+	// Subject is the email subject
+	Subject string
+	// Mailing list contains the name of the mailing list that the email was
+	// posted to, if any.
+	MailingList string
+	// CC is the "carbon copy" list of addresses
+	CC []string
+	// To is the recipient of the email.
+	To []string
+	// ThreadTopic contains the topic of the thread (e.g. google groups threads)
+	ThreadTopic []string
+	// DeliveredTo is who the email was sent to. This can contain multiple
+	// addresses if the email was forwarded.
+	DeliveredTo []string
 }
 
 // GetPartialMetadata gets some of the useful metadata from the headers.
