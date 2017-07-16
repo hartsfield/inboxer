@@ -183,8 +183,9 @@ func Query(srv *gmail.Service, query string) []*gmail.Message {
 }
 
 // getById gets emails individually by ID. This is neccessary because this is
-// how the gmail API is set up apparently (but why?).
-//
+// how the gmail API is set [0][1] up apparently (but why?).
+// [0] https://developers.google.com/gmail/api/v1/reference/users/messages/get
+// [1] https://stackoverflow.com/questions/36365172/message-payload-is-always-null-for-all-messages-how-do-i-get-this-data
 func getById(srv *gmail.Service, msgs *gmail.ListMessagesResponse) []*gmail.Message {
 	var msgSlice []*gmail.Message
 	for _, v := range msgs.Messages {
@@ -219,7 +220,6 @@ func CheckForUnreadByLabel(srv *gmail.Service, label string) (int64, error) {
 		return -1, err
 	}
 
-	// fmt.Println(label.MessagesUnread)
 	if inbox.MessagesUnread == 0 && inbox.ThreadsUnread == 0 {
 		return 0, nil
 	}
@@ -239,7 +239,6 @@ func CheckForUnread(srv *gmail.Service) (int64, error) {
 		return -1, err
 	}
 
-	// fmt.Println(label.MessagesUnread)
 	if inbox.MessagesUnread == 0 && inbox.ThreadsUnread == 0 {
 		return 0, nil
 	}
