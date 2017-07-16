@@ -1,21 +1,40 @@
+// Copyright (c) 2017 J. Hartsfield
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 // Package inboxer is a Go library for checking email using the google Gmail
 // API.
 package inboxer
 
 // SCOPE:
 // TODO:
-// Check for unread messages
 // Mark as read/unread/important/spam
-// Get Previews/snippet
-// Get labels
 // Get emails by label
 // Get emails by date
-///
+//
+// tests
 // Watch inbox
 // LICENSE
+// DOCS
 // README.md
 // how-to: add client credentials (for readme)
-// tests
+// Get Previews/snippet (put in docs)
 //
 // WORKS:
 // Get emails by sender
@@ -23,10 +42,10 @@ package inboxer
 // Get emails by subject
 // Get emails by mailing-list
 // Get emails by thread-topic
-//
-// DONE:
+// Get labels
+// Check for unread messages
+// Convert date to human readable format
 // Get Body
-//
 
 import (
 	"encoding/base64"
@@ -38,6 +57,10 @@ import (
 
 	gmail "google.golang.org/api/gmail/v1"
 )
+
+func getByDate(srv *gmail.Service, start time.Time, end time.Time) *[]gmail.Message {
+	inbox, err := srv.Users.Labels.Get("me", label).Do()
+}
 
 // GetBody gets, decodes, and returns the body of the email. It returns an
 // error if decoding goes wrong. mimeType is used to indicate whether you want
@@ -66,11 +89,12 @@ func GetBody(msg *gmail.Message, mimeType string) (string, error) {
 	return "", errors.New("Couldn't Read Body")
 }
 
+// CheckForUnreadByLabel checks for unread mail maching the speciified label.
 // NOTE: When checking your inbox for unread messages, it's not uncommon for
 // it return thousands of unread messages that you don't know about. To see them
-// in gmail, search your mail for "label:unread". For CheckForUnread to work
-// properly you need to mark all mail as read either through gmail or through
-// the MarkAllAsRead() function found in this library.
+// in gmail, search your mail for "label:unread". For CheckForUnreadByLabel to
+// work properly you need to mark all mail as read either through gmail or
+// through the MarkAllAsRead() function found in this library.
 func CheckForUnreadByLabel(srv *gmail.Service, label string) (int64, error) {
 	inbox, err := srv.Users.Labels.Get("me", label).Do()
 	if err != nil {
@@ -85,6 +109,12 @@ func CheckForUnreadByLabel(srv *gmail.Service, label string) (int64, error) {
 	return inbox.MessagesUnread + inbox.ThreadsUnread, nil
 }
 
+// CheckForUnread checks for mail labeled "UNREAD".
+// NOTE: When checking your inbox for unread messages, it's not uncommon for
+// it return thousands of unread messages that you don't know about. To see them
+// in gmail, search your mail for "label:unread". For CheckForUnread to
+// work properly you need to mark all mail as read either through gmail or
+// through the MarkAllAsRead() function found in this library.
 func CheckForUnread(srv *gmail.Service) (int64, error) {
 	inbox, err := srv.Users.Labels.Get("me", "UNREAD").Do()
 	if err != nil {
@@ -175,12 +205,12 @@ func GetMessages(srv *gmail.Service, howMany uint) ([]*gmail.Message, error) {
 	var msgSlice []*gmail.Message
 
 	// Get the messages
-	msgs, err := srv.Users.Messages.List("me").Do()
+	msgs, err := srv.Users.Messages.List("me").MaxResults(int64(howMany)).Do()
 	if err != nil {
 		return msgSlice, err
 	}
 
-	for _, v := range msgs.Messages[:howMany] {
+	for _, v := range msgs.Messages {
 		msg, _ := srv.Users.Messages.Get("me", v.Id).Do()
 		msgSlice = append(msgSlice, msg)
 	}
