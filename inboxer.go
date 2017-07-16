@@ -184,26 +184,24 @@ type PartialMetadata struct {
 // GetPartialMetadata gets some of the useful metadata from the headers.
 func GetPartialMetadata(msg *gmail.Message) *PartialMetadata {
 	info := &PartialMetadata{}
-	fmt.Println("========================================================")
-	fmt.Println(msg.Snippet)
 	for _, v := range msg.Payload.Headers {
 		switch v.Name {
 		case "Sender":
-			info.Sender = append(info.Sender, v.Value)
+			info.Sender = v.Value
 		case "From":
-			info.From = append(info.From, v.Value)
-		case "To":
-			info.To = append(info.To, v.Value)
+			info.From = v.Value
+		case "Subject":
+			info.Subject = v.Value
+		case "Mailing-list":
+			info.MailingList = v.Value
 		case "CC":
 			info.CC = append(info.CC, v.Value)
-		case "Subject":
-			info.Subject = append(info.Subject, v.Value)
-		case "Mailing-list":
-			info.MailingList = append(info.MailingList, v.Value)
-		case "Delivered-To":
-			info.DeliveredTo = append(info.DeliveredTo, v.Value)
+		case "To":
+			info.To = append(info.To, v.Value)
 		case "Thread-Topic":
 			info.ThreadTopic = append(info.ThreadTopic, v.Value)
+		case "Delivered-To":
+			info.DeliveredTo = append(info.DeliveredTo, v.Value)
 		}
 	}
 	return info
