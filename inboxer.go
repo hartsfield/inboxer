@@ -25,7 +25,6 @@ package inboxer
 // SCOPE:
 // TODO:
 // channels and go routines
-// Mark as read/unread/important/spam
 // check/return errors
 // Watch inbox
 //
@@ -34,8 +33,10 @@ package inboxer
 // README.md
 // how-to: add client credentials (for readme)
 // Get Previews/snippet (put in docs)
+// spell checg
 //
 // WORKS:
+// Mark as read/unread/important/spam
 // Get emails by query
 // Get email metadata
 // Get email main body
@@ -106,12 +107,12 @@ func GetBody(msg *gmail.Message, mimeType string) (string, error) {
 }
 
 // PartialMetadata stores email metadata. Some fields may sound redundant, but
-// infact have different contexts. Some are slices of string because the ones
+// in fact have different contexts. Some are slices of string because the ones
 // that have multiple values are still being sorted from those that don't.
 type PartialMetadata struct {
 	// Sender is the entity that originally created and sent the message
 	Sender string
-	// From is the entitiy that sent the message to you (e.g. googlegroups). Most
+	// From is the entity that sent the message to you (e.g. googlegroups). Most
 	// of the time this information is only relevant to mailing lists.
 	From string
 	// Subject is the email subject
@@ -167,7 +168,7 @@ func decodeEmailBody(data string) (string, error) {
 	return string(decoded), nil
 }
 
-// ReceivedTime parses and converts a unix time stamp into a human readable
+// ReceivedTime parses and converts a Unix time stamp into a human readable
 // format ().
 func ReceivedTime(datetime int64) time.Time {
 	conv := strconv.FormatInt(datetime, 10)
@@ -192,11 +193,11 @@ func Query(srv *gmail.Service, query string) []*gmail.Message {
 	return getById(srv, inbox)
 }
 
-// getById gets emails individually by ID. This is neccessary because this is
+// getByID gets emails individually by ID. This is necessary because this is
 // how the gmail API is set [0][1] up apparently (but why?).
 // [0] https://developers.google.com/gmail/api/v1/reference/users/messages/get
 // [1] https://stackoverflow.com/questions/36365172/message-payload-is-always-null-for-all-messages-how-do-i-get-this-data
-func getById(srv *gmail.Service, msgs *gmail.ListMessagesResponse) []*gmail.Message {
+func getByID(srv *gmail.Service, msgs *gmail.ListMessagesResponse) []*gmail.Message {
 	var msgSlice []*gmail.Message
 	for _, v := range msgs.Messages {
 		msg, _ := srv.Users.Messages.Get("me", v.Id).Do()
@@ -218,7 +219,7 @@ func GetMessages(srv *gmail.Service, howMany uint) ([]*gmail.Message, error) {
 	return getById(srv, msgs), nil
 }
 
-// CheckForUnreadByLabel checks for unread mail maching the speciified label.
+// CheckForUnreadByLabel checks for unread mail matching the specified label.
 // NOTE: When checking your inbox for unread messages, it's not uncommon for
 // it return thousands of unread messages that you don't know about. To see them
 // in gmail, search your mail for "label:unread". For CheckForUnreadByLabel to
@@ -239,8 +240,8 @@ func CheckForUnreadByLabel(srv *gmail.Service, label string) (int64, error) {
 
 // CheckForUnread checks for mail labeled "UNREAD".
 // NOTE: When checking your inbox for unread messages, it's not uncommon for
-// it return thousands of unread messages that you don't know about. To see them
-// in gmail, search your mail for "label:unread". For CheckForUnread to
+// it returns thousands of unread messages that you don't know about. To see
+// them in gmail, search your mail for "label:unread". For CheckForUnread to
 // work properly you need to mark all mail as read either through gmail or
 // through the MarkAllAsRead() function found in this library.
 func CheckForUnread(srv *gmail.Service) (int64, error) {
@@ -270,14 +271,4 @@ func GetLabels(srv *gmail.Service) (*gmail.ListLabelsResponse, error) {
 
 // 	wr, _ := srv.Users.Watch("me", req).Do()
 // 	fmt.Println(wr.ForceSendFields)
-// }
-//
-//// HasLabel takes an email and a label and checks if that email has that label.
-// func HasLabel(msg *gmail.Message, label string) bool {
-// 	for _, v := range msg.LabelIds {
-// 		if v == strings.ToUpper(label) {
-// 			return true
-// 		}
-// 	}
-// 	return false
 // }
