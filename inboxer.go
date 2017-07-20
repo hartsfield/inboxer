@@ -221,9 +221,9 @@ func GetMessages(srv *gmail.Service, howMany uint) ([]*gmail.Message, error) {
 
 // CheckForUnreadByLabel checks for unread mail matching the specified label.
 // NOTE: When checking your inbox for unread messages, it's not uncommon for
-// it return thousands of unread messages that you don't know about. To see them
-// in gmail, search your mail for "label:unread". For CheckForUnreadByLabel to
-// work properly you need to mark all mail as read either through gmail or
+// it to return thousands of unread messages that you don't know about. To see
+// them in gmail, query your mail for "label:unread". For CheckForUnreadByLabel
+// to work properly you need to mark all mail as read either through gmail or
 // through the MarkAllAsRead() function found in this library.
 func CheckForUnreadByLabel(srv *gmail.Service, label string) (int64, error) {
 	inbox, err := srv.Users.Labels.Get("me", label).Do()
@@ -240,8 +240,8 @@ func CheckForUnreadByLabel(srv *gmail.Service, label string) (int64, error) {
 
 // CheckForUnread checks for mail labeled "UNREAD".
 // NOTE: When checking your inbox for unread messages, it's not uncommon for
-// it returns thousands of unread messages that you don't know about. To see
-// them in gmail, search your mail for "label:unread". For CheckForUnread to
+// it to return thousands of unread messages that you don't know about. To see
+// them in gmail, query your mail for "label:unread". For CheckForUnread to
 // work properly you need to mark all mail as read either through gmail or
 // through the MarkAllAsRead() function found in this library.
 func CheckForUnread(srv *gmail.Service) (int64, error) {
