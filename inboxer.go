@@ -1,3 +1,6 @@
+// Package inboxer is a Go library for checking email using the google Gmail
+// API.
+
 // Copyright (c) 2017 J. Hartsfield
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,20 +21,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Package inboxer is a Go library for checking email using the google Gmail
-// API.
 package inboxer
 
 // SCOPE:
 // TODO:
 // channels and go routines
-// check/return errors
 // Watch inbox
+// metalinter vet etc
 //
 // tests (test for both messages and "threads")
+// put ExampleFunctions in test file
 // DOCS
 // README.md
-// how-to: add client credentials (for readme)
+// how-to: add client credentials (for readme/docs)
 // Get Previews/snippet (put in docs)
 // spell checg
 //
@@ -46,6 +48,7 @@ package inboxer
 //
 // DONE:
 // LICENSE
+// check/return errors/fmt
 
 import (
 	"encoding/base64"
@@ -69,7 +72,10 @@ func MarkAllAsRead(srv *gmail.Service) error {
 		RemoveLabelIds: []string{"UNREAD"},
 	}
 
-	msgs := Query(srv, "label:UNREAD")
+	msgs, err := Query(srv, "label:UNREAD")
+	if err != nil {
+		return err
+	}
 	for _, v := range msgs {
 		_, err := MarkAs(srv, v, req)
 		if err != nil {
@@ -162,7 +168,6 @@ func GetPartialMetadata(msg *gmail.Message) *PartialMetadata {
 func decodeEmailBody(data string) (string, error) {
 	decoded, err := base64.URLEncoding.DecodeString(data)
 	if err != nil {
-		fmt.Println("decode error:", err)
 		return "", err
 	}
 	return string(decoded), nil
@@ -170,40 +175,47 @@ func decodeEmailBody(data string) (string, error) {
 
 // ReceivedTime parses and converts a Unix time stamp into a human readable
 // format ().
-func ReceivedTime(datetime int64) time.Time {
+func ReceivedTime(datetime int64) (time.Time, error) {
 	conv := strconv.FormatInt(datetime, 10)
 	// Remove trailing zeros.
 	conv = conv[:len(conv)-3]
 	tc, err := strconv.ParseInt(conv, 10, 64)
 	if err != nil {
-		fmt.Println(err)
+		return time.Unix(tc, 0), err
 	}
-	return time.Unix(tc, 0)
+	return time.Unix(tc, 0), nil
 }
 
 // Query queries the inbox for a string following the search style of the gmail
 // online mailbox.
 // example:
 // "in:sent after:2017/01/01 before:2017/01/30"
-func Query(srv *gmail.Service, query string) []*gmail.Message {
+func Query(srv *gmail.Service, query string) ([]*gmail.Message, error) {
 	inbox, err := srv.Users.Messages.List("me").Q(query).Do()
 	if err != nil {
-		fmt.Println(err)
+		return inbox.Messages, err
 	}
-	return getById(srv, inbox)
+	msgs, err := getByID(srv, inbox)
+	if err != nil {
+		return msgs, err
+	}
+	return msgs, nil
 }
 
 // getByID gets emails individually by ID. This is necessary because this is
 // how the gmail API is set [0][1] up apparently (but why?).
 // [0] https://developers.google.com/gmail/api/v1/reference/users/messages/get
 // [1] https://stackoverflow.com/questions/36365172/message-payload-is-always-null-for-all-messages-how-do-i-get-this-data
-func getByID(srv *gmail.Service, msgs *gmail.ListMessagesResponse) []*gmail.Message {
+func getByID(srv *gmail.Service, msgs *gmail.ListMessagesResponse) ([]*gmail.Message, error) {
 	var msgSlice []*gmail.Message
 	for _, v := range msgs.Messages {
-		msg, _ := srv.Users.Messages.Get("me", v.Id).Do()
+		msg, err := srv.Users.Messages.Get("me", v.Id).Do()
+		if err != nil {
+			return msgSlice, err
+		}
 		msgSlice = append(msgSlice, msg)
 	}
-	return msgSlice
+	return msgSlice, nil
 }
 
 // GetMessages gets and returns gmail messages
@@ -211,12 +223,16 @@ func GetMessages(srv *gmail.Service, howMany uint) ([]*gmail.Message, error) {
 	var msgSlice []*gmail.Message
 
 	// Get the messages
-	msgs, err := srv.Users.Messages.List("me").MaxResults(int64(howMany)).Do()
+	inbox, err := srv.Users.Messages.List("me").MaxResults(int64(howMany)).Do()
 	if err != nil {
 		return msgSlice, err
 	}
 
-	return getById(srv, msgs), nil
+	msgs, err := getByID(srv, inbox)
+	if err != nil {
+		return msgs, err
+	}
+	return msgs, nil
 }
 
 // CheckForUnreadByLabel checks for unread mail matching the specified label.
@@ -262,13 +278,18 @@ func GetLabels(srv *gmail.Service) (*gmail.ListLabelsResponse, error) {
 	return srv.Users.Labels.List("me").Do()
 }
 
-// func watchInbox() {
-// 	req := &gmail.WatchRequest{
-// 		LabelFilterAction: "include",
-// 		LabelIds:          []string{"UNREAD"},
-// 		TopicName:         "gmailmsg",
-// 	}
+// WatchInbox watches the user inbox
+func WatchInbox(srv *gmail.Service) {
+	req := &gmail.WatchRequest{
+		LabelFilterAction: "include",
+		LabelIds:          []string{"UNREAD"},
+		// projects/my-project-id/topics/my-topic-id
+		TopicName: "projects/keen-vision-135323/topics/gmailmsg",
+	}
 
-// 	wr, _ := srv.Users.Watch("me", req).Do()
-// 	fmt.Println(wr.ForceSendFields)
-// }
+	wr, err := srv.Users.Watch("me", req).Do()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(wr.ServerResponse.HTTPStatusCode)
+}
