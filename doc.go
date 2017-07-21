@@ -194,6 +194,8 @@ func main() {
 *******************************************************************************
 *  GETTING THE NUMBER OF UNREAD MESSAGES
 *******************************************************************************
+// NOTE: to actually view the email text use inboxer.Query and query for unread
+// emails.
 func main() {
 	// Connect to the gmail API service.
 	ctx := context.Background()
@@ -209,6 +211,7 @@ func main() {
 *******************************************************************************
 *  CONVERTING DATES
 *******************************************************************************
+// Convert UNIX time stamps to human readable format
 func main() {
 	// Connect to the gmail API service.
 	ctx := context.Background()
@@ -221,11 +224,33 @@ func main() {
 
 	// Range over the messages
 	for _, msg := range msgs {
+		// Convert the date
 		time, err := inboxer.ReceivedTime(msg.InternalDate)
 		if err != nil {
 			fmt.Println(err)
 		}
 		fmt.Println("Date: ", time)
+  }
+}
+*******************************************************************************
+* SNIPPET
+*******************************************************************************
+// Snippets are not really part of the package but I'm including them in the doc
+// because they'll likely be useful to anyone working with this package.
+func main() {
+	// Connect to the gmail API service.
+	ctx := context.Background()
+	srv := gmailAPI.ConnectToService(ctx, gmail.GmailComposeScope)
+
+	msgs, err := inboxer.Query(srv, "category:forums after:2017/01/01 before:2017/01/30")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// Range over the messages
+	for _, msg := range msgs {
+		// this one is part of the api
+		fmt.Println(msg.Snippet)
   }
 }
 */

@@ -31,10 +31,8 @@ package inboxer
 //
 // tests (test for both messages and "threads")
 // put ExampleFunctions in test file
-// DOCS
 // README.md
 // how-to: add client credentials (for readme/docs)
-// Get Previews/snippet (put in docs)
 // spell checg
 //
 // WORKS:
@@ -49,6 +47,8 @@ package inboxer
 // DONE:
 // LICENSE
 // check/return errors/fmt
+// DOCS
+// Get Previews/snippet (put in docs)
 
 import (
 	"encoding/base64"
