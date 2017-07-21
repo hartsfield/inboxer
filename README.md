@@ -100,10 +100,11 @@ func main() {
 		fmt.Println(body)
 	}
 }
+
 ```
+## QUERIES
 
-##  QUERIES
-
+```
 func main() {
 	// Connect to the gmail API service.
 	ctx := context.Background()
@@ -118,9 +119,10 @@ func main() {
     // do stuff
   }
 }
-*******************************************************************************
-*  MARKING EMAILS
-*******************************************************************************
+```
+## MARKING EMAILS
+
+```
 func main() {
 	// Connect to the gmail API service.
 	ctx := context.Background()
@@ -141,9 +143,10 @@ func main() {
     msg, err := inboxer.MarkAs(srv, msg, req)
 	}
 }
-*******************************************************************************
-*  MARK ALL "UNREAD" EMAILS AS "READ"
-*******************************************************************************
+```
+## MARK ALL "UNREAD" EMAILS AS "READ"
+
+```
 func main() {
 	// Connect to the gmail API service.
 	ctx := context.Background()
@@ -151,9 +154,10 @@ func main() {
 
 	inboxer.MarkAllAsRead(srv)
 }
-*******************************************************************************
-*  GETTING LABELS
-*******************************************************************************
+```
+## GETTING LABELS
+
+```
 func main() {
 	// Connect to the gmail API service.
 	ctx := context.Background()
@@ -168,9 +172,10 @@ func main() {
 		fmt.Println(label)
 	}
 }
-*******************************************************************************
-*  METADATA
-*******************************************************************************
+```
+## METADATA
+
+```
 func main() {
 	// Connect to the gmail API service.
 	ctx := context.Background()
@@ -195,9 +200,10 @@ func main() {
 		fmt.Println("Thread-Topic: ", md.ThreadTopic)
 	}
 }
-*******************************************************************************
-*  GETTING THE EMAIL BODY
-*******************************************************************************
+```
+## GETTING THE EMAIL BODY
+
+```
 func main() {
 	// Connect to the gmail API service.
 	ctx := context.Background()
@@ -216,9 +222,10 @@ func main() {
 		fmt.Println(body)
   }
 }
-*******************************************************************************
-*  GETTING THE NUMBER OF UNREAD MESSAGES
-*******************************************************************************
+```
+## GETTING THE NUMBER OF UNREAD MESSAGES
+
+```
 // NOTE: to actually view the email text use inboxer.Query and query for unread
 // emails.
 func main() {
@@ -233,9 +240,10 @@ func main() {
 	}
 	fmt.Printf("You have %s unread emails.", num)
 }
-*******************************************************************************
-*  CONVERTING DATES
-*******************************************************************************
+```
+## CONVERTING DATES
+
+```
 // Convert UNIX time stamps to human readable format
 func main() {
 	// Connect to the gmail API service.
@@ -257,9 +265,11 @@ func main() {
 		fmt.Println("Date: ", time)
   }
 }
-*******************************************************************************
-* SNIPPET
-*******************************************************************************
+```
+
+## SNIPPET
+
+```
 // Snippets are not really part of the package but I'm including them in the doc
 // because they'll likely be useful to anyone working with this package.
 func main() {
@@ -278,5 +288,4 @@ func main() {
 		fmt.Println(msg.Snippet)
   }
 }
-*/
-p
+```
