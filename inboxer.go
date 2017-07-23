@@ -23,16 +23,16 @@
 
 package inboxer
 
+// NOTE: Still under development!
+
 // SCOPE:
 // TODO:
-// channels and go routines
 // Watch inbox
 // metalinter vet etc
+// rewrite with channels and go routines
 //
 // tests (test for both messages and "threads")
 // put ExampleFunctions in test file
-// README.md
-// how-to: add client credentials (for readme/docs)
 // spell checg
 //
 // WORKS:
@@ -45,6 +45,8 @@ package inboxer
 // Convert date to human readable format
 //
 // DONE:
+// README.md
+// how-to: add client credentials (for readme/docs)
 // LICENSE
 // check/return errors/fmt
 // DOCS
