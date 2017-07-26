@@ -27,7 +27,6 @@ package inboxer
 
 // SCOPE:
 // TODO:
-// Watch inbox
 // metalinter vet etc
 // rewrite with channels and go routines
 //
@@ -55,7 +54,6 @@ package inboxer
 import (
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -183,7 +181,7 @@ func ReceivedTime(datetime int64) (time.Time, error) {
 	conv = conv[:len(conv)-3]
 	tc, err := strconv.ParseInt(conv, 10, 64)
 	if err != nil {
-		return time.Unix(tc, 0), err
+		return time.Unix(0, 0), err
 	}
 	return time.Unix(tc, 0), nil
 }
@@ -195,7 +193,7 @@ func ReceivedTime(datetime int64) (time.Time, error) {
 func Query(srv *gmail.Service, query string) ([]*gmail.Message, error) {
 	inbox, err := srv.Users.Messages.List("me").Q(query).Do()
 	if err != nil {
-		return inbox.Messages, err
+		return []*gmail.Message{}, err
 	}
 	msgs, err := getByID(srv, inbox)
 	if err != nil {
@@ -278,20 +276,4 @@ func CheckForUnread(srv *gmail.Service) (int64, error) {
 // GetLabels gets a list of the labels used in the users inbox.
 func GetLabels(srv *gmail.Service) (*gmail.ListLabelsResponse, error) {
 	return srv.Users.Labels.List("me").Do()
-}
-
-// WatchInbox watches the user inbox
-func WatchInbox(srv *gmail.Service) {
-	req := &gmail.WatchRequest{
-		LabelFilterAction: "include",
-		LabelIds:          []string{"UNREAD"},
-		// projects/my-project-id/topics/my-topic-id
-		TopicName: "projects/keen-vision-135323/topics/gmailmsg",
-	}
-
-	wr, err := srv.Users.Watch("me", req).Do()
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(wr.ServerResponse.HTTPStatusCode)
 }
