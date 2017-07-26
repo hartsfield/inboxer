@@ -25,7 +25,6 @@ package inboxer
 
 // NOTE: Still under development!
 
-// SCOPE:
 // TODO:
 // metalinter vet etc
 // rewrite with channels and go routines
@@ -33,23 +32,6 @@ package inboxer
 // tests (test for both messages and "threads")
 // put ExampleFunctions in test file
 // spell checg
-//
-// WORKS:
-// Mark as read/unread/important/spam
-// Get emails by query
-// Get email metadata
-// Get email main body
-// Get labels
-// Check for unread messages
-// Convert date to human readable format
-//
-// DONE:
-// README.md
-// how-to: add client credentials (for readme/docs)
-// LICENSE
-// check/return errors/fmt
-// DOCS
-// Get Previews/snippet (put in docs)
 
 import (
 	"encoding/base64"
@@ -68,20 +50,26 @@ func MarkAs(srv *gmail.Service, msg *gmail.Message, req *gmail.ModifyMessageRequ
 
 // MarkAllAsRead removes the UNREAD label from all emails.
 func MarkAllAsRead(srv *gmail.Service) error {
+	// Request to remove the label ID "UNREAD"
 	req := &gmail.ModifyMessageRequest{
 		RemoveLabelIds: []string{"UNREAD"},
 	}
 
+	// Get the messages labeled "UNREAD"
 	msgs, err := Query(srv, "label:UNREAD")
 	if err != nil {
 		return err
 	}
+
+	// For each UNREAD message, request to remove the "UNREAD" label (thus
+	// maring it as "READ").
 	for _, v := range msgs {
 		_, err := MarkAs(srv, v, req)
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -89,6 +77,8 @@ func MarkAllAsRead(srv *gmail.Service) error {
 // error if decoding goes wrong. mimeType is used to indicate whether you want
 // the plain text or html encoding ("text/html", "text/plain").
 func GetBody(msg *gmail.Message, mimeType string) (string, error) {
+	// Loop through the message payload parts to find the parts with the
+	// mimetypes we want.
 	for _, v := range msg.Payload.Parts {
 		if v.MimeType == "multipart/alternative" {
 			for _, l := range v.Parts {
