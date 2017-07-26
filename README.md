@@ -18,7 +18,7 @@
 [//]: # (OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE)
 [//]: # (SOFTWARE.)
 
-![inbox](https://i.imgur.com/E4ocP1N.png) 
+<img src="https://i.imgur.com/E4ocP1N.png" height="180em"><img src="https://golang.org/doc/gopher/appenginegopher.jpg" height="180em">
 
 # INBOXER
 
