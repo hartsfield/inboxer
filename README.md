@@ -18,6 +18,8 @@
 [//]: # (OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE)
 [//]: # (SOFTWARE.)
 
+![inbox](https://i.imgur.com/E4ocP1N.png) 
+
 # INBOXER
 
 Package inboxer is a Go package for checking your gmail inbox, it has the following features:
