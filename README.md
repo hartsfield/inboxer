@@ -55,7 +55,7 @@ For inboxer to work you must have a gmail account and a file named "client_secre
  
  > - Move this file to your working directory and rename it client_secret.json.
 
-```
+```go
 package main
 
 import (
@@ -106,7 +106,7 @@ func main() {
 ```
 ## QUERIES
 
-```
+```go
 func main() {
 	// Connect to the gmail API service.
 	ctx := context.Background()
@@ -125,7 +125,7 @@ func main() {
 ```
 ## MARKING EMAILS
 
-```
+```go
 func main() {
 	// Connect to the gmail API service.
 	ctx := context.Background()
@@ -149,7 +149,7 @@ func main() {
 ```
 ## MARK ALL "UNREAD" EMAILS AS "READ"
 
-```
+```go
 func main() {
 	// Connect to the gmail API service.
 	ctx := context.Background()
@@ -160,7 +160,7 @@ func main() {
 ```
 ## GETTING LABELS
 
-```
+```go
 func main() {
 	// Connect to the gmail API service.
 	ctx := context.Background()
@@ -178,7 +178,7 @@ func main() {
 ```
 ## METADATA
 
-```
+```go
 func main() {
 	// Connect to the gmail API service.
 	ctx := context.Background()
@@ -206,7 +206,7 @@ func main() {
 ```
 ## GETTING THE EMAIL BODY
 
-```
+```go
 func main() {
 	// Connect to the gmail API service.
 	ctx := context.Background()
@@ -228,7 +228,7 @@ func main() {
 ```
 ## GETTING THE NUMBER OF UNREAD MESSAGES
 
-```
+```go
 // NOTE: to actually view the email text use inboxer.Query and query for unread
 // emails.
 func main() {
@@ -246,7 +246,7 @@ func main() {
 ```
 ## CONVERTING DATES
 
-```
+```go
 // Convert UNIX time stamps to human readable format
 func main() {
 	// Connect to the gmail API service.
@@ -272,7 +272,7 @@ func main() {
 
 ## SNIPPET
 
-```
+```go
 // Snippets are not really part of the package but I'm including them in the doc
 // because they'll likely be useful to anyone working with this package.
 func main() {
