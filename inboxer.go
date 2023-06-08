@@ -37,6 +37,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	gmail "google.golang.org/api/gmail/v1"
@@ -131,22 +132,22 @@ type PartialMetadata struct {
 func GetPartialMetadata(msg *gmail.Message) *PartialMetadata {
 	info := &PartialMetadata{}
 	for _, v := range msg.Payload.Headers {
-		switch v.Name {
-		case "Sender":
+		switch strings.ToLower(v.Name) {
+		case "sender":
 			info.Sender = v.Value
-		case "From":
+		case "from":
 			info.From = v.Value
-		case "Subject":
+		case "subject":
 			info.Subject = v.Value
-		case "Mailing-list":
+		case "mailing-list":
 			info.MailingList = v.Value
-		case "CC":
+		case "cc":
 			info.CC = append(info.CC, v.Value)
-		case "To":
+		case "to":
 			info.To = append(info.To, v.Value)
-		case "Thread-Topic":
+		case "thread-Topic":
 			info.ThreadTopic = append(info.ThreadTopic, v.Value)
-		case "Delivered-To":
+		case "delivered-To":
 			info.DeliveredTo = append(info.DeliveredTo, v.Value)
 		}
 	}
